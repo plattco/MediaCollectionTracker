@@ -1,0 +1,6 @@
+@MediaCollectionAPI_HostAddress = http://localhost:5204
+
+GET {{MediaCollectionAPI_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###
