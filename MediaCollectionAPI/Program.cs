@@ -18,13 +18,13 @@ builder.Services.AddDbContext<MediaCollectionContext>(options =>
 
 builder.Services.AddCors(options =>
 {
-    options.AddPolicy("AllowVueApp",
-        builder =>
+    options.AddPolicy("AllowFrontend",
+        policy =>
         {
-            builder.WithOrigins("http://localhost:8080", "http://codyrplatt.com")
+            
+            policy.WithOrigins("http://codyrplatt.com/") 
                 .AllowAnyHeader()
-                .AllowAnyMethod()
-                .AllowCredentials();
+                .AllowAnyMethod();
         });
 });
 
@@ -35,7 +35,7 @@ var app = builder.Build();
     app.UseSwaggerUI();
 
 app.UseHttpsRedirection();
-app.UseCors("AllowVueApp");
+app.UseCors("AllowFrontend");
 app.UseAuthorization();
 app.MapControllers();
 
