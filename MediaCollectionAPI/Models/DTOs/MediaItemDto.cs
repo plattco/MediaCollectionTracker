@@ -1,3 +1,6 @@
+using System;
+using System.Collections.Generic;
+
 namespace MediaCollectionAPI.Models.DTOs
 {
     public class MediaItemDto

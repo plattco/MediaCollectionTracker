@@ -1,10 +1,16 @@
 using Microsoft.EntityFrameworkCore;
 using MediaCollectionAPI.Models;
+using Npgsql;
 
 namespace MediaCollectionAPI.Data
 {
     public class MediaCollectionContext : DbContext
     {
+        static MediaCollectionContext()
+        {
+            
+        }
+        
         public MediaCollectionContext(DbContextOptions<MediaCollectionContext> options)
             : base(options)
         {
@@ -14,10 +20,19 @@ namespace MediaCollectionAPI.Data
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
+            modelBuilder.HasPostgresEnum<MediaType>();
+            
             modelBuilder.Entity<MediaItem>(entity =>
             {
                 entity.ToTable("media_items");
                 
+                entity.Property(e => e.MediaType)
+                    .HasColumnName("media_type")
+                    .HasConversion<string>();
+
+                entity.Property(e => e.Status)
+                    .HasColumnName("status")
+                    .HasConversion<string>();
                 entity.Property(e => e.Id)
                     .HasColumnName("id")
                     .HasDefaultValueSql("gen_random_uuid()");
@@ -26,16 +41,8 @@ namespace MediaCollectionAPI.Data
                     .HasColumnName("title")
                     .IsRequired();
 
-                entity.Property(e => e.MediaType)
-                    .HasColumnName("media_type")
-                    .HasConversion<string>();
-
                 entity.Property(e => e.Platform)
                     .HasColumnName("platform");
-
-                entity.Property(e => e.Status)
-                    .HasColumnName("status")
-                    .HasConversion<string>();
 
                 entity.Property(e => e.Rating)
                     .HasColumnName("rating");

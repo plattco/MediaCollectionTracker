@@ -291,7 +291,7 @@ namespace MediaCollectionAPI.Controllers
         public async Task<ActionResult<CollectionStatsDto>> GetCollectionStats()
         {
             var stats = await _context.MediaItems
-                .Where(m => m.Status == MediaStatus.owned)
+                .Where(m => m.Status == MediaStatus.Owned)
                 .GroupBy(m => m.MediaType)
                 .Select(g => new MediaTypeStatsDto
                 {
@@ -306,12 +306,12 @@ namespace MediaCollectionAPI.Controllers
 
             var overallStats = new CollectionStatsDto
             {
-                TotalItems = await _context.MediaItems.CountAsync(m => m.Status == MediaStatus.owned),
+                TotalItems = await _context.MediaItems.CountAsync(m => m.Status == MediaStatus.Owned),
                 TotalValue = await _context.MediaItems
-                    .Where(m => m.Status == MediaStatus.owned)
+                    .Where(m => m.Status == MediaStatus.Owned)
                     .SumAsync(m => (m.Price ?? 0) * m.Quantity),
                 TotalFavorites = await _context.MediaItems
-                    .CountAsync(m => m.IsFavorite && m.Status == MediaStatus.owned),
+                    .CountAsync(m => m.IsFavorite && m.Status == MediaStatus.Owned),
                 ByMediaType = stats
             };
 

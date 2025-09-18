@@ -2,20 +2,20 @@ namespace MediaCollectionAPI.Models
 {
     public enum MediaType
     {
-        video_game,
-        dvd,
-        vhs,
-        cd,
-        book,
-        manga
+        VideoGame,
+        DVD,
+        VHS,
+        CD,
+        Book,
+        Manga
     }
 
     public enum MediaStatus
     {
-        owned,
-        wishlist,
-        sold,
-        loaned,
-        lost
+        Owned,
+        Wishlist,
+        Sold,
+        Loaned,
+        Lost
     }
 }

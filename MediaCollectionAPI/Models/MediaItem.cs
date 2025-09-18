@@ -17,7 +17,7 @@ namespace MediaCollectionAPI.Models
         [MaxLength(100)]
         public string Platform { get; set; }
         
-        public MediaStatus Status { get; set; } = MediaStatus.owned;
+        public MediaStatus Status { get; set; } = MediaStatus.Owned;
         
         [Range(0, 5)]
         public decimal? Rating { get; set; }

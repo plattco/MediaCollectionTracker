@@ -1,11 +1,17 @@
 using MediaCollectionAPI.Data;
+using MediaCollectionAPI.Models;
 using Microsoft.EntityFrameworkCore;
+using Npgsql;
 
 var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
+
+NpgsqlConnection.GlobalTypeMapper.MapEnum<MediaType>("media_type");
+NpgsqlConnection.GlobalTypeMapper.MapEnum<MediaStatus>("status_type"); // Assuming this exists
+
 
 builder.Services.AddDbContext<MediaCollectionContext>(options =>
     options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
