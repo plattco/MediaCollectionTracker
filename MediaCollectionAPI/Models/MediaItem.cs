@@ -11,6 +11,9 @@ namespace MediaCollectionAPI.Models
         [MaxLength(500)]
         public string Title { get; set; }
         
+        public Guid UserId { get; set; }
+        public User User { get; set; }
+        
         [Required]
         public MediaType MediaType { get; set; }
         

@@ -17,6 +17,7 @@ namespace MediaCollectionAPI.Data
         }
 
         public DbSet<MediaItem> MediaItems { get; set; }
+        public DbSet<User> Users { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -86,6 +87,11 @@ namespace MediaCollectionAPI.Data
                 entity.Property(e => e.UpdatedAt)
                     .HasColumnName("updated_at");
             });
+            
+            modelBuilder.Entity<MediaItem>()
+                .HasOne(m => m.User)
+                .WithMany(u => u.MediaItems)
+                .HasForeignKey(m => m.UserId);
         }
     }
 }
