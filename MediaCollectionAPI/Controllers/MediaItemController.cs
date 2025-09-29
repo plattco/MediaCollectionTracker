@@ -3,6 +3,7 @@ using Microsoft.EntityFrameworkCore;
 using MediaCollectionAPI.Data;
 using MediaCollectionAPI.Models;
 using MediaCollectionAPI.Models.DTOs;
+using System.Linq; // Ensure this is included
 
 namespace MediaCollectionAPI.Controllers
 {
@@ -20,6 +21,7 @@ namespace MediaCollectionAPI.Controllers
         // GET: api/MediaItems
         [HttpGet]
         public async Task<ActionResult<IEnumerable<MediaItemDto>>> GetMediaItems(
+            [FromQuery] Guid? userId,
             [FromQuery] string mediaType = null,
             [FromQuery] string platform = null,
             [FromQuery] string status = null,
@@ -31,6 +33,15 @@ namespace MediaCollectionAPI.Controllers
             [FromQuery] int pageSize = 50)
         {
             var query = _context.MediaItems.AsQueryable();
+
+            if (userId.HasValue)
+            {
+                query = query.Where(m => m.UserId == userId.Value);
+            }
+            else
+            {
+                return Ok(Enumerable.Empty<MediaItemDto>());
+            }
 
             // Apply filters
             if (!string.IsNullOrEmpty(mediaType))
@@ -95,9 +106,9 @@ namespace MediaCollectionAPI.Controllers
                 }).ToListAsync();
 
             // Add pagination info to response headers
-            Response.Headers.Add("X-Total-Count", totalItems.ToString());
-            Response.Headers.Add("X-Page", page.ToString());
-            Response.Headers.Add("X-Page-Size", pageSize.ToString());
+            Response.Headers.Append("X-Total-Count", totalItems.ToString());
+            Response.Headers.Append("X-Page", page.ToString());
+            Response.Headers.Append("X-Page-Size", pageSize.ToString());
 
             return Ok(items);
         }
@@ -145,8 +156,14 @@ namespace MediaCollectionAPI.Controllers
             if (!Enum.TryParse<MediaStatus>(dto.Status, out var status))
                 return BadRequest($"Invalid status: {dto.Status}");
 
+            if (!dto.UserId.HasValue)
+            {
+                return BadRequest("UserId is required to create a new media item.");
+            }
+
             var item = new MediaItem
             {
+                UserId = dto.UserId.Value,
                 Title = dto.Title,
                 MediaType = mediaType,
                 Platform = dto.Platform,
@@ -284,9 +301,19 @@ namespace MediaCollectionAPI.Controllers
 
         // GET: api/MediaItems/stats
         [HttpGet("stats")]
-        public async Task<ActionResult<CollectionStatsDto>> GetCollectionStats()
+        public async Task<ActionResult<CollectionStatsDto>> GetCollectionStats([FromQuery] Guid? userId)
         {
-            var stats = await _context.MediaItems
+            var userItemsQuery = _context.MediaItems.AsQueryable();
+            if (userId.HasValue)
+            {
+                userItemsQuery = userItemsQuery.Where(m => m.UserId == userId.Value);
+            }
+            else
+            {
+                return Ok(new CollectionStatsDto());
+            }
+
+            var stats = await userItemsQuery
                 .Where(m => m.Status == MediaStatus.Owned)
                 .GroupBy(m => m.MediaType)
                 .Select(g => new MediaTypeStatsDto
@@ -302,11 +329,11 @@ namespace MediaCollectionAPI.Controllers
 
             var overallStats = new CollectionStatsDto
             {
-                TotalItems = await _context.MediaItems.CountAsync(m => m.Status == MediaStatus.Owned),
-                TotalValue = await _context.MediaItems
+                TotalItems = await userItemsQuery.CountAsync(m => m.Status == MediaStatus.Owned),
+                TotalValue = await userItemsQuery
                     .Where(m => m.Status == MediaStatus.Owned)
                     .SumAsync(m => (m.Price ?? 0) * m.Quantity),
-                TotalFavorites = await _context.MediaItems
+                TotalFavorites = await userItemsQuery
                     .CountAsync(m => m.IsFavorite && m.Status == MediaStatus.Owned),
                 ByMediaType = stats
             };

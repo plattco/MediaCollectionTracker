@@ -43,6 +43,7 @@ namespace MediaCollectionAPI.Models.DTOs
         public string? Condition { get; set; }
         public string? Notes { get; set; }
         public string? ImageUrl { get; set; }
+        public Guid? UserId { get; set; }
     }
 
     public class UpdateMediaItemDto : CreateMediaItemDto
