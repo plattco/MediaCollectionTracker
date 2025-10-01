@@ -8,6 +8,7 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
+builder.Services.AddHttpClient();
 
 NpgsqlConnection.GlobalTypeMapper.MapEnum<MediaType>("media_type");
 NpgsqlConnection.GlobalTypeMapper.MapEnum<MediaStatus>("status_type"); // Assuming this exists

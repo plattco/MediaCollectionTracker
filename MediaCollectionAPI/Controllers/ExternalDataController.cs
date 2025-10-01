@@ -6,7 +6,10 @@ using System.Text.Json;
 using System.Threading.Tasks;
 using System.Linq;
 using Microsoft.Extensions.Configuration; 
-using System.Collections.Generic; 
+using System.Collections.Generic;
+using HtmlAgilityPack;
+using Microsoft.Playwright;
+
 public class IgdbGame
 {
     public int id { get; set; }
@@ -100,6 +103,80 @@ public class ExternalDataController : ControllerBase
 
         return Ok(games);
     }
+    
+    [HttpGet("value-agent")]
+public async Task<IActionResult> GetValueFromAgent([FromQuery] string title, [FromQuery] string platform)
+{
+    if (string.IsNullOrWhiteSpace(title))
+    {
+        return BadRequest("A title is required to search for a value.");
+    }
+    
+    // 1. Combine title and platform for a more specific search query
+    var searchQuery = $"{title} {platform ?? ""}";
+    
+    using var playwright = await Playwright.CreateAsync();
+    await using var browser = await playwright.Chromium.LaunchAsync(new() { Headless = true });
+    var page = await browser.NewPageAsync();
+
+    try
+    {
+        // 2. Build the special URL for eBay's sold listings
+        var url = $"https://www.ebay.com/sch/i.html?_nkw={Uri.EscapeDataString(searchQuery)}&LH_Complete=1&LH_Sold=1";
+        await page.GotoAsync(url);
+
+        // 3. Wait for the search results container to load to ensure the page is ready
+        await page.WaitForSelectorAsync("ul.s-item__wrapper", new PageWaitForSelectorOptions { Timeout = 7000 }); // 7 sec timeout
+
+        string htmlContent = await page.ContentAsync();
+
+        var htmlDoc = new HtmlDocument();
+        htmlDoc.LoadHtml(htmlContent);
+        
+        // 4. Use the selector we found to grab all the price elements
+        var priceNodes = htmlDoc.DocumentNode.SelectNodes("//span[contains(@class, 's-item__price')]");
+        
+        var prices = new List<decimal>();
+        if (priceNodes != null)
+        {
+            // 5. Loop through the first 5 results to get a stable average price
+            foreach (var node in priceNodes.Take(5))
+            {
+                // Clean the text: "$15.50" -> "15.50"
+                // The Split is to handle price ranges like "$15.50 to $20.00"
+                string priceText = node.InnerText.Trim().Replace("$", "").Split(' ')[0];
+                if (decimal.TryParse(priceText, out decimal price))
+                {
+                    prices.Add(price);
+                }
+            }
+        }
+        
+        // 6. If we found any prices, calculate the average and return it
+        if (prices.Any())
+        {
+            var averagePrice = prices.Average();
+            return Ok(new { 
+                message = "Value successfully estimated from recent sales.",
+                estimatedPrice = Math.Round(averagePrice, 2) // Round to 2 decimal places
+            });
+        }
+        
+        return NotFound("Could not determine a market value. No recent sales found.");
+    }
+    catch (TimeoutException)
+    {
+        return NotFound("Could not find any sold listings that match the search query.");
+    }
+    catch (Exception ex)
+    {
+        return StatusCode(500, $"An error occurred while running the agent: {ex.Message}");
+    }
+    finally
+    {
+        await browser.CloseAsync();
+    }
+}
 
     // Endpoint to get the resale value from eBay's sold listings
     [HttpGet("value")]
