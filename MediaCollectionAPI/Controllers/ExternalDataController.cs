@@ -5,11 +5,8 @@ using System.Text;
 using System.Text.Json;
 using System.Threading.Tasks;
 using System.Linq;
-using Microsoft.Extensions.Configuration; // Add this using
-using System.Collections.Generic; // Add this using
-
-// These are simple classes to hold data from the API responses.
-// You can place them at the bottom of the file or in their own DTO folder.
+using Microsoft.Extensions.Configuration; 
+using System.Collections.Generic; 
 public class IgdbGame
 {
     public int id { get; set; }
@@ -157,7 +154,6 @@ public class ExternalDataController : ControllerBase
 
             if (prices.Any())
             {
-                // Calculate the average of the most recent sold listings
                 var averagePrice = prices.Average();
                 return Ok(new { price = averagePrice });
             }
